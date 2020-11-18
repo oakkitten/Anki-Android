@@ -24,6 +24,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.content.pm.ActivityInfo;
+import android.content.pm.PackageManager;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.os.Handler;
@@ -917,6 +919,9 @@ public class CardBrowser extends NavigationDrawerActivity implements
         if (compat.ACTION_PROCESS_TEXT.equals(intent.getAction())) {
             CharSequence search = intent.getCharSequenceExtra(compat.EXTRA_PROCESS_TEXT);
             if (search != null && search.length() != 0) {
+                if (wasStartedUsingSecondaryContextMenu()) {
+                    search = "deck:漢字 kanji:" + search;
+                }
                 Timber.i("CardBrowser :: Called with search intent: %s", search.toString());
                 mSearchView.setQuery(search, true);
                 intent.removeExtra(compat.EXTRA_PROCESS_TEXT);  // prevent this block from re-running
@@ -959,6 +964,15 @@ public class CardBrowser extends NavigationDrawerActivity implements
         }
         //API 23: Replace with Intent.ACTION_PROCESS_TEXT
         return "android.intent.action.PROCESS_TEXT".equalsIgnoreCase(intent.getAction());
+    }
+
+    private boolean wasStartedUsingSecondaryContextMenu() {
+        try {
+            ActivityInfo appInfo = getPackageManager().getActivityInfo(getComponentName(), PackageManager.GET_META_DATA);
+            return appInfo.metaData != null && appInfo.metaData.getBoolean("secondary_context_menu");
+        } catch (PackageManager.NameNotFoundException e) {
+            return false;
+        }
     }
 
     private void updatePreviewMenuItem() {

@@ -191,6 +191,18 @@
                 <data android:mimeType="text/plain" />
             </intent-filter>
         </activity-alias>
+        <activity-alias
+            android:name="com.ichi2.anki.CardBrowserContextMenuActionSecondary"
+            android:label="Custom card search"
+            android:enabled="true"
+            android:targetActivity=".CardBrowser">
+            <meta-data android:name="secondary_context_menu" android:value="true"/>
+            <intent-filter>
+                <action android:name="android.intent.action.PROCESS_TEXT" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+        </activity-alias>
         <activity
             android:name="com.ichi2.anki.CardBrowser"
             android:label="@string/card_browser"

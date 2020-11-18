@@ -861,6 +861,10 @@ public class CardBrowser extends NavigationDrawerActivity implements
 
                 @Override
                 public boolean onMenuItemActionCollapse(MenuItem item) {
+                    if (wasLoadedFromExternalTextActionItem()) {
+                        finishWithDefaultAnimation();
+                        return false;
+                    }
                     // SearchView doesn't support empty queries so we always reset the search when collapsing
                     mSearchTerms = "";
                     mSearchView.setQuery(mSearchTerms, false);
@@ -915,7 +919,7 @@ public class CardBrowser extends NavigationDrawerActivity implements
             if (search != null && search.length() != 0) {
                 Timber.i("CardBrowser :: Called with search intent: %s", search.toString());
                 mSearchView.setQuery(search, true);
-                intent.setAction(Intent.ACTION_DEFAULT);
+                intent.removeExtra(compat.EXTRA_PROCESS_TEXT);  // prevent this block from re-running
             }
         }
 

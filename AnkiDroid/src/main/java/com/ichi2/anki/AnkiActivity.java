@@ -262,6 +262,10 @@ public class AnkiActivity extends AppCompatActivity implements SimpleMessageDial
         super.finish();
     }
 
+    public void finishWithDefaultAnimation() {
+        Timber.i("finishWithDefaultAnimation");
+        super.finish();
+    }
 
     public void finishWithoutAnimation() {
         Timber.i("finishWithoutAnimation");

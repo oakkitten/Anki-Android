@@ -63,8 +63,6 @@ import com.ichi2.anki.InitialActivity.StartupFailure
 import com.ichi2.anki.InitialActivity.StartupFailure.*
 import com.ichi2.anki.StudyOptionsFragment.DeckStudyData
 import com.ichi2.anki.StudyOptionsFragment.StudyOptionsListener
-import com.ichi2.anki.UIUtils.showSimpleSnackbar
-import com.ichi2.anki.UIUtils.showSnackbar
 import com.ichi2.anki.UIUtils.showThemedToast
 import com.ichi2.anki.analytics.UsageAnalytics
 import com.ichi2.anki.dialogs.*
@@ -83,6 +81,7 @@ import com.ichi2.anki.receiver.SdCardReceiver
 import com.ichi2.anki.servicelayer.DeckService
 import com.ichi2.anki.servicelayer.SchedulerService.NextCard
 import com.ichi2.anki.servicelayer.UndoService.Undo
+import com.ichi2.anki.snackbar.showSnackbar
 import com.ichi2.anki.stats.AnkiStatsTaskHandler
 import com.ichi2.anki.web.HostNumFactory
 import com.ichi2.anki.widgets.DeckAdapter
@@ -364,8 +363,8 @@ open class DeckPicker :
 
         // Then set theme and content view
         super.onCreate(savedInstanceState)
-        handleStartup()
         setContentView(R.layout.homescreen)
+        handleStartup()
         val mainView = findViewById<View>(android.R.id.content)
 
         // check, if tablet layout
@@ -762,9 +761,9 @@ open class DeckPicker :
             if (resultCode == AbstractFlashcardViewer.RESULT_NO_MORE_CARDS) {
                 // Show a message when reviewing has finished
                 if (col.sched.count() == 0) {
-                    showSimpleSnackbar(this, R.string.studyoptions_congrats_finished, false)
+                    showSnackbar(R.string.studyoptions_congrats_finished)
                 } else {
-                    showSimpleSnackbar(this, R.string.studyoptions_no_cards_due, false)
+                    showSnackbar(R.string.studyoptions_no_cards_due)
                 }
             } else if (resultCode == AbstractFlashcardViewer.RESULT_ABORT_AND_SYNC) {
                 Timber.i("Obtained Abort and Sync result")
@@ -1085,7 +1084,7 @@ open class DeckPicker :
             // Specifying a checkpoint in the future is not supported, please don't do it!
             if (current < upgradeDbVersion) {
                 Timber.e("Invalid value for CHECK_DB_AT_VERSION")
-                showSimpleSnackbar(this, "Invalid value for CHECK_DB_AT_VERSION", false)
+                showSnackbar("Invalid value for CHECK_DB_AT_VERSION")
                 onFinishedStartup()
                 return
             }
@@ -1145,7 +1144,7 @@ open class DeckPicker :
                 // Don't show new features dialog for development builds
                 InitialActivity.setUpgradedToLatestVersion(preferences)
                 val ver = resources.getString(R.string.updated_version, VersionUtils.pkgVersionName)
-                showSnackbar(this, ver, true, -1, null, findViewById(R.id.root_layout), null)
+                showSnackbar(ver, Snackbar.LENGTH_SHORT)
                 showStartupScreensAndDialogs(preferences, 2)
             }
         } else {
@@ -1295,12 +1294,14 @@ open class DeckPicker :
             if (syncMessage == null || syncMessage.isEmpty()) {
                 if (messageResource == R.string.youre_offline && !Connection.allowLoginSyncOnNoConnection) {
                     // #6396 - Add a temporary "Try Anyway" button until we sort out `isOnline`
-                    showSnackbar(this, messageResource, false, R.string.sync_even_if_offline, {
-                        Connection.allowLoginSyncOnNoConnection = true
-                        sync()
-                    }, null)
+                    showSnackbar(messageResource) {
+                        setAction(R.string.sync_even_if_offline) {
+                            Connection.allowLoginSyncOnNoConnection = true
+                            sync()
+                        }
+                    }
                 } else {
-                    showSimpleSnackbar(this, messageResource, false)
+                    showSnackbar(messageResource)
                 }
             } else {
                 val res = AnkiDroidApp.getAppResources()
@@ -2008,13 +2009,17 @@ open class DeckPicker :
             openStudyOptions(false)
         } else if (col.sched.newDue() || col.sched.revDue()) {
             // If there are no cards to review because of the daily study limit then give "Study more" option
-            showSnackbar(this, R.string.studyoptions_limit_reached, false, R.string.study_more, {
-                val d = mCustomStudyDialogFactory.newCustomStudyDialog().withArguments(
-                    CustomStudyDialog.ContextMenuConfiguration.LIMITS,
-                    col.decks.selected(), true
-                )
-                showDialogFragment(d)
-            }, findViewById(R.id.root_layout), mSnackbarShowHideCallback)
+            showSnackbar(R.string.studyoptions_limit_reached) {
+                addCallback(mSnackbarShowHideCallback)
+                setAction(R.string.study_more) {
+                    val d = mCustomStudyDialogFactory.newCustomStudyDialog().withArguments(
+                        CustomStudyDialog.ContextMenuConfiguration.LIMITS,
+                        col.decks.selected(), true
+                    )
+                    showDialogFragment(d)
+                }
+            }
+
             // Check if we need to update the fragment or update the deck list. The same checks
             // are required for all snackbars below.
             if (fragmented) {
@@ -2031,10 +2036,11 @@ open class DeckPicker :
             openStudyOptions(false)
         } else if (!deckDueTreeNode.hasChildren() && col.isEmptyDeck(did)) {
             // If the deck is empty and has no children then show a message saying it's empty
-            showSnackbar(
-                this, R.string.empty_deck, false, R.string.empty_deck_add_note,
-                { addNote() }, findViewById(R.id.root_layout), mSnackbarShowHideCallback
-            )
+            showSnackbar(R.string.empty_deck) {
+                addCallback(mSnackbarShowHideCallback)
+                setAction(R.string.empty_deck_add_note) { addNote() }
+            }
+
             if (fragmented) {
                 openStudyOptions(false)
             } else {
@@ -2042,13 +2048,17 @@ open class DeckPicker :
             }
         } else {
             // Otherwise say there are no cards scheduled to study, and give option to do custom study
-            showSnackbar(this, R.string.studyoptions_empty_schedule, false, R.string.custom_study, {
-                val d = mCustomStudyDialogFactory.newCustomStudyDialog().withArguments(
-                    CustomStudyDialog.ContextMenuConfiguration.EMPTY_SCHEDULE,
-                    col.decks.selected(), true
-                )
-                showDialogFragment(d)
-            }, findViewById(R.id.root_layout), mSnackbarShowHideCallback)
+            showSnackbar(R.string.studyoptions_empty_schedule) {
+                addCallback(mSnackbarShowHideCallback)
+                setAction(R.string.custom_study) {
+                    val d = mCustomStudyDialogFactory.newCustomStudyDialog().withArguments(
+                        CustomStudyDialog.ContextMenuConfiguration.EMPTY_SCHEDULE,
+                        col.decks.selected(), true
+                    )
+                    showDialogFragment(d)
+                }
+            }
+
             if (fragmented) {
                 openStudyOptions(false)
             } else {
@@ -2281,11 +2291,7 @@ open class DeckPicker :
                         col.newDecks.removeDecks(listOf(did))
                     }
                 }
-                showSimpleSnackbar(
-                    this@DeckPicker,
-                    col.tr.browsingCardsDeleted(changes.count),
-                    false
-                )
+                showSnackbar(col.tr.browsingCardsDeleted(changes.count))
             }
         }
 
@@ -2294,7 +2300,7 @@ open class DeckPicker :
             return null
         }
         if (did == 1L) {
-            showSimpleSnackbar(this, R.string.delete_deck_default_deck, true)
+            showSnackbar(R.string.delete_deck_default_deck)
             dismissAllDialogFragments()
             return null
         }
@@ -2503,17 +2509,11 @@ open class DeckPicker :
                 val msg = String.format(context.resources.getString(R.string.empty_cards_count), result.size)
                 val dialog = ConfirmationDialog()
                 dialog.setArgs(msg)
-                val confirm = Runnable {
+                dialog.setConfirm {
                     context.col.remCards(result.requireNoNulls())
-                    showSimpleSnackbar(
-                        context,
-                        String.format(
-                            context.resources.getString(R.string.empty_cards_deleted), result.size
-                        ),
-                        false
-                    )
+                    val message = context.resources.getString(R.string.empty_cards_deleted, result.size)
+                    context.showSnackbar(message)
                 }
-                dialog.setConfirm(confirm)
                 context.showDialogFragment(dialog)
             }
             if (context.mProgressDialog != null && context.mProgressDialog!!.isShowing) {

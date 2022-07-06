@@ -45,6 +45,7 @@ import com.ichi2.anki.analytics.UsageAnalytics;
 import com.ichi2.anki.dialogs.AsyncDialogFragment;
 import com.ichi2.anki.dialogs.DialogHandler;
 import com.ichi2.anki.dialogs.SimpleMessageDialog;
+import com.ichi2.anki.snackbar.SnackbarsKt;
 import com.ichi2.async.CollectionLoader;
 import com.ichi2.compat.CompatHelper;
 import com.ichi2.compat.customtabs.CustomTabActivityHelper;
@@ -299,7 +300,7 @@ public class AnkiActivity extends AppCompatActivity implements SimpleMessageDial
             super.startActivityForResult(intent, requestCode);
         } catch (ActivityNotFoundException e) {
             Timber.w(e);
-            UIUtils.showSimpleSnackbar(this, R.string.activity_start_failed,true);
+            SnackbarsKt.showSnackbar(this, R.string.activity_start_failed);
         }
     }
 
@@ -323,7 +324,7 @@ public class AnkiActivity extends AppCompatActivity implements SimpleMessageDial
             launcher.launch(intent, ActivityTransitionAnimation.getAnimationOptions(this, animation));
         } catch (ActivityNotFoundException e) {
             Timber.w(e);
-            UIUtils.showSimpleSnackbar(this, R.string.activity_start_failed, true);
+            SnackbarsKt.showSnackbar(this, R.string.activity_start_failed);
         }
     }
 

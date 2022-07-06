@@ -33,6 +33,7 @@ import com.ichi2.anki.contextmenu.CardBrowserContextMenu
 import com.ichi2.anki.exception.ConfirmModSchemaException
 import com.ichi2.anki.exception.StorageAccessException
 import com.ichi2.anki.provider.CardContentProvider
+import com.ichi2.anki.snackbar.showSnackbar
 import com.ichi2.compat.CompatHelper
 import timber.log.Timber
 
@@ -201,7 +202,7 @@ class AdvancedSettingsFragment : SettingsFragment() {
                 Timber.w(e)
                 // We use a different message here. We have limited space in the snackbar
                 val error = getString(R.string.activity_start_failed_load_url, githubThirdPartyAppsUrl)
-                UIUtils.showSimpleSnackbar(requireActivity(), error, false)
+                requireActivity().showSnackbar(error)
             }
             true
         }

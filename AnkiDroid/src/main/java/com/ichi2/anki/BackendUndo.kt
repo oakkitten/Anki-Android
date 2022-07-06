@@ -16,7 +16,7 @@
 
 package com.ichi2.anki
 
-import com.ichi2.anki.UIUtils.showSimpleSnackbar
+import com.ichi2.anki.snackbar.showSnackbar
 import com.ichi2.libanki.CollectionV16
 import com.ichi2.libanki.undoNew
 import com.ichi2.libanki.undoableOp
@@ -30,11 +30,7 @@ suspend fun AnkiActivity.backendUndoAndShowPopup(col: CollectionV16): Boolean {
                 col.undoNew()
             }
         }
-        showSimpleSnackbar(
-            this,
-            col.tr.undoActionUndone(changes.operation),
-            false
-        )
+        showSnackbar(col.tr.undoActionUndone(changes.operation))
         true
     } catch (exc: BackendException) {
         @BlocksSchemaUpgrade("Backend module should export this as a separate Exception")

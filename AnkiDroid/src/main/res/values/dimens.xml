@@ -28,4 +28,12 @@
     <dimen name="deck_picker_left_padding">24dp</dimen>
     <dimen name="deck_picker_right_padding">4dp</dimen>
     <dimen name="note_editor_toolbar_height">52dp</dimen>
+
+    <!--
+      The IDE gives the following warning for this dimen; I think this is a false positive?
+        The dimen "mtrl_snackbar_background_corner_radius" in values has no declaration
+        in the base values folder; this can lead to crashes when the resource is queried
+        in a configuration that does not match this qualifier.
+     -->
+    <dimen name="mtrl_snackbar_background_corner_radius" tools:ignore="MissingDefaultResource">8dp</dimen>
 </resources>

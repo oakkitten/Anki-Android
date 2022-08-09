@@ -109,6 +109,8 @@ import net.ankiweb.rsdroid.BackendFactory
 import net.ankiweb.rsdroid.RustCleanup
 import timber.log.Timber
 import java.io.File
+import java.lang.Thread.sleep
+import kotlin.concurrent.thread
 import kotlin.math.abs
 import kotlin.math.roundToLong
 
@@ -805,6 +807,14 @@ open class DeckPicker :
         Timber.d("onResume()")
         super.onResume()
         refreshState()
+
+        thread {
+            sleep(3000)
+            runQuery(col, 0)
+            runQuery(col, 1)
+            runQuery(col, 2)
+            runQuery(col, 3)
+        }
     }
 
     fun refreshState() {

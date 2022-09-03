@@ -37,11 +37,11 @@ import android.widget.TextView
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.withStyledAttributes
-import androidx.core.os.bundleOf
 import androidx.preference.DialogPreference
 import androidx.preference.PreferenceDialogFragmentCompat
 import com.ichi2.anki.AnkiDroidApp
 import com.ichi2.anki.R
+import com.ichi2.anki.preferences.DialogFragmentProvider
 import com.ichi2.ui.FixedTextView
 
 class SeekBarPreferenceCompat
@@ -51,7 +51,7 @@ constructor(
     attrs: AttributeSet? = null,
     defStyleAttr: Int = R.attr.dialogPreferenceStyle,
     defStyleRes: Int = R.style.Preference_DialogPreference
-) : DialogPreference(context, attrs, defStyleAttr, defStyleRes) {
+) : DialogPreference(context, attrs, defStyleAttr, defStyleRes), DialogFragmentProvider {
 
     private var suffix: String
     private var default: Int
@@ -262,13 +262,7 @@ constructor(
                 LinearLayout.LayoutParams.WRAP_CONTENT, weight
             )
         }
-
-        companion object {
-            fun newInstance(key: String): SeekBarDialogFragmentCompat {
-                return SeekBarDialogFragmentCompat().apply {
-                    arguments = bundleOf(ARG_KEY to key)
-                }
-            }
-        }
     }
+
+    override fun makeDialogFragment() = SeekBarDialogFragmentCompat()
 }

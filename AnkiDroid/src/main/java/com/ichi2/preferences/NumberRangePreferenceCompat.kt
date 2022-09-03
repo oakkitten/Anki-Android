@@ -18,7 +18,6 @@
 package com.ichi2.preferences
 
 import android.content.Context
-import android.os.Bundle
 import android.text.InputFilter
 import android.text.InputType
 import android.text.TextUtils
@@ -30,6 +29,7 @@ import androidx.preference.EditTextPreference
 import androidx.preference.EditTextPreferenceDialogFragmentCompat
 import com.ichi2.anki.AnkiDroidApp
 import com.ichi2.anki.R
+import com.ichi2.anki.preferences.DialogFragmentProvider
 import com.ichi2.annotations.NeedsTest
 import timber.log.Timber
 
@@ -41,7 +41,7 @@ constructor(
     attrs: AttributeSet? = null,
     defStyleAttr: Int = R.attr.editTextPreferenceStyle,
     defStyleRes: Int = R.style.Preference_DialogPreference_EditTextPreference
-) : EditTextPreference(context, attrs, defStyleAttr, defStyleRes) {
+) : EditTextPreference(context, attrs, defStyleAttr, defStyleRes), DialogFragmentProvider {
 
     var defaultValue: String? = null
 
@@ -189,15 +189,7 @@ constructor(
                 numberRangePreference.setValue(newValue)
             }
         }
-
-        companion object {
-            fun newInstance(key: String?): NumberRangeDialogFragmentCompat {
-                val fragment = NumberRangeDialogFragmentCompat()
-                val b = Bundle(1)
-                b.putString(ARG_KEY, key)
-                fragment.arguments = b
-                return fragment
-            }
-        }
     }
+
+    override fun makeDialogFragment() = NumberRangeDialogFragmentCompat()
 }

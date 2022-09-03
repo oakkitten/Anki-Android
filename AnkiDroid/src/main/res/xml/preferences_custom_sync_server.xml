@@ -10,19 +10,14 @@
     <com.ichi2.anki.preferences.HtmlHelpPreference
         android:summary="@string/custom_sync_server_help"
         search:ignore="true" />
-    <SwitchPreference
-        android:key="@string/custom_sync_server_enable_key"
-        android:title="@string/custom_sync_server_enable_title"
-        android:summary="@string/custom_sync_server_enable_summary"
-        android:defaultValue="false"/>
-    <EditTextPreference
-        android:dependency="@string/custom_sync_server_enable_key"
+    <com.ichi2.anki.preferences.VersatileTextWithASwitchPreference
         android:key="@string/custom_sync_server_collection_url_key"
         android:title="@string/custom_sync_server_base_url_title"
+        android:inputType="textUri"
         app:useSimpleSummaryProvider="true" />
-    <EditTextPreference
-        android:dependency="@string/custom_sync_server_enable_key"
+    <com.ichi2.anki.preferences.VersatileTextWithASwitchPreference
         android:key="@string/custom_sync_server_media_url_key"
         android:title="@string/custom_sync_server_media_url_title"
+        android:inputType="textUri"
         app:useSimpleSummaryProvider="true" />
 </PreferenceScreen>

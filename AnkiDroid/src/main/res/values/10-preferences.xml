@@ -206,6 +206,19 @@
     <string name="advanced_forecast_stats_mc_n_iterations_title" maxLength="41">Number of iterations of the simulation</string>
     <!-- Custom sync server settings -->
     <string name="custom_sync_server_title" maxLength="41">Custom sync server</string>
+    <string name="custom_sync_server_help"><![CDATA[
+        As an alternative to using AnkiWeb,
+        you can use your own servers for synchronization between devices.
+        You can specify either of the servers, or both;
+        if not set, the default AnkiWeb server will be used instead.
+        For example, you could use the sync server built into Anki
+        to synchronize the collection while you are off the grid,
+        and AnkiWeb to synchronize media while online.
+        <a href="https://docs.ankidroid.org/#_custom_sync_server">Learn more</a>
+        <br>
+        <br>Note that unlike in older AnkiDroid versions,
+        now you have to specify the full custom sync URL,
+        e.g. https://example.com:8080/sync/.]]></string>
     <string name="custom_sync_server_enable_title" maxLength="41">Use custom sync server</string>
     <string name="custom_sync_server_enable_summary">If you don\'t want to use the proprietary AnkiWeb service you can specify an alternative server here</string>
     <string name="custom_sync_server_base_url_title" maxLength="41">Sync url</string>

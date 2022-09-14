@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:background="?attr/selectableItemBackground"
+    android:minHeight="?android:attr/listPreferredItemHeightSmall"
+    android:focusable="true"
+    android:clickable="true"
+    android:layoutDirection="locale">
+
+    <ImageView
+        android:id="@+id/chevron"
+        style="@style/Widget.MaterialComponents.CompoundButton.CheckBox"
+        android:layout_width="40dp"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp"
+        android:layout_marginStart="8dp"
+        app:srcCompat="@drawable/ic_chevron_right_black"
+        app:tint="@color/m3_selection_control_button_tint"
+        />
+
+    <ImageView
+        android:id="@+id/icon"
+        android:layout_width="24dp"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:layout_marginEnd="12dp"
+        />
+
+    <TextView
+        android:id="@+id/text"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:gravity="start|center_vertical"
+        android:textAppearance="?android:textAppearanceMedium"
+        android:textDirection="locale"
+        android:textAlignment="gravity"
+        android:paddingEnd="8dp"
+        />
+
+    <CheckBox
+        android:id="@+id/checkbox"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:paddingEnd="24dp"
+        />
+</LinearLayout>

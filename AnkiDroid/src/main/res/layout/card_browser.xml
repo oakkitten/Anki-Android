@@ -25,17 +25,86 @@
 
             <include layout="@layout/toolbar" />
 
+            <!-- We use a combination of paddingHorizontal + clipToPadding here instead of setting
+                 paddingHorizontal on ChipGroup as that leads to strange behavior on RTL layout -->
+            <HorizontalScrollView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="?android:attr/colorBackground"
+                android:paddingHorizontal="8dp"
+                android:clipToPadding="false"
+                android:scrollbars="none" >
+
+                <com.google.android.material.chip.ChipGroup
+                    android:id="@+id/chip_group"
+                    style="@style/Widget.Material3.ChipGroup"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:elevation="0dp"
+                    app:singleLine="true" >
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chip_deck"
+                        style="@style/Chip.WithIcon"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Decks"
+                        app:chipIcon="@drawable/ic_deck"
+
+                        />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chip_tag"
+                        style="@style/Chip.WithIcon"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Tags"
+                        app:chipIcon="@drawable/ic_tag"
+                        />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chip_flag"
+                        style="@style/Chip.WithIcon"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Flags"
+                        app:chipIcon="@drawable/label_icon_flags"
+                        />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chip_today"
+                        style="@style/Chip.WithIcon"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Today"
+                        app:chipIcon="@drawable/ic_clock"
+                        />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chip_state"
+                        style="@style/Chip.WithIcon"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="State"
+                        app:chipIcon="@drawable/ic_card_state"
+                        />
+                </com.google.android.material.chip.ChipGroup>
+            </HorizontalScrollView>
+
             <LinearLayout
                 android:layout_width="match_parent"
                 android:background="?android:attr/colorBackground"
                 android:orientation="horizontal"
-                style="@style/card_browser_spinner_layout">
+                android:layout_height="48dp"
+                android:layout_marginTop="-8dp" >
 
                 <Spinner
                     android:id="@+id/browser_column1_spinner"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
+                    android:spinnerMode="dropdown"
+                    android:dropDownVerticalOffset="8dp"
                     />
 
                 <Spinner
@@ -43,6 +112,7 @@
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
+                    android:dropDownVerticalOffset="8dp"
                     />
             </LinearLayout>
         </LinearLayout>

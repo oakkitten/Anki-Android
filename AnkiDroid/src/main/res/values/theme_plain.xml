@@ -63,8 +63,9 @@
         <!--Dialog-->
         <item name="md_color_button_text">@color/black</item>
 
+        <item name="bottomSheetDialogTheme">@style/ModalBottomSheetDialog</item>
+
         <!-- Filter Bottom sheet -->
-        <item name="bottomSheetDialogTheme">@style/AppBottomSheetDialogThemePlain</item>
         <item name="filterSheetBackground">@color/white</item>
         <item name="filterItemBackground">@color/white</item>
         <item name="filterItemBackgroundSelected">@color/theme_light_drawer_row_current</item>

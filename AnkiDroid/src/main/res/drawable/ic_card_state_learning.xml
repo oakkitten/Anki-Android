@@ -1,0 +1,21 @@
+<vector android:autoMirrored="true" android:height="24dp"
+    android:viewportHeight="6.35" android:viewportWidth="6.35"
+    android:width="24dp" xmlns:android="http://schemas.android.com/apk/res/android"
+    android:tint="?attr/toolbarIconColor">
+    <path android:fillColor="#00000000"
+        android:pathData="M3.175,3.175m-2.1167,0a2.1167,2.1167 0,1 1,4.2333 0a2.1167,2.1167 0,1 1,-4.2333 0"
+        android:strokeAlpha="0.951613" android:strokeColor="#000000"
+        android:strokeLineJoin="round" android:strokeWidth="0.529167"/>
+    <path android:fillColor="#000000"
+        android:pathData="M2.0582,3.8199a0.323,0.323 0,1 0,0.6461 0a0.323,0.323 0,1 0,-0.6461 0z"
+        android:strokeAlpha="0.951613" android:strokeColor="#00000000"
+        android:strokeLineCap="round" android:strokeLineJoin="round" android:strokeWidth="1.29219"/>
+    <path android:fillColor="#000000"
+        android:pathData="M3.6574,3.8199a0.3114,0.3114 0,1 0,0.6227 0a0.3114,0.3114 0,1 0,-0.6227 0z"
+        android:strokeAlpha="0.951613" android:strokeColor="#00000000"
+        android:strokeLineCap="round" android:strokeLineJoin="round" android:strokeWidth="1.24542"/>
+    <path android:fillColor="#00000000"
+        android:pathData="M1.2688,2.8797C1.6547,2.8583 2.1258,2.4452 2.4843,2.1437l0.0982,0.7367C3.0495,2.8432 3.5544,2.4183 3.8675,2.1478L3.9722,2.8775C4.3851,2.837 4.6559,2.5848 4.8433,2.4212"
+        android:strokeAlpha="0.951613" android:strokeColor="#000000"
+        android:strokeLineCap="round" android:strokeLineJoin="round" android:strokeWidth="0.502708"/>
+</vector>

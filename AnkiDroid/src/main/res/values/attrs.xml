@@ -170,4 +170,11 @@
          The latter is set by colorPrimary, but theme overlay can't use it,
          as it itself overrides colorPrimary, which is used by the view directly. -->
     <attr name="tabLayoutBackgroundColor" format="color"/>
+
+    <attr name="bottomSheetFilterBackgroundColor" format="color|reference"/>
+
+    <attr name="chipInactiveStrokeColor" format="color"/>
+    <attr name="chipInactiveTextAndIconColor" format="color"/>
+    <attr name="chipActiveBackgroundColor" format="color"/>
+    <attr name="chipActiveTextAndIconColor" format="color"/>
 </resources>

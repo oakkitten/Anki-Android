@@ -1,10 +1,15 @@
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="24dp"
     android:height="24dp"
-    android:viewportWidth="24"
-    android:viewportHeight="24"
-    android:tint="?attr/colorControlNormal">
+    android:viewportWidth="6.35"
+    android:viewportHeight="6.35"
+    android:autoMirrored="true"
+    android:tint="?attr/toolbarIconColor">
   <path
-      android:fillColor="@android:color/white"
-      android:pathData="M17.63,5.84C17.27,5.33 16.67,5 16,5L5,5.01C3.9,5.01 3,5.9 3,7v10c0,1.1 0.9,1.99 2,1.99L16,19c0.67,0 1.27,-0.33 1.63,-0.84L22,12l-4.37,-6.16z"/>
+      android:pathData="M4.2333,1.9844C3.8943,1.7115 3.7053,1.7198 3.4396,1.7198h-1.5875c-0.5292,0 -0.7937,0.2646 -0.7937,0.7937l-0,1.7198c0,0.5292 0.2646,0.6615 0.7938,0.6615h1.5875c0.2646,0 0.4713,-0.0041 0.7937,-0.2646L5.2917,3.7042c0.2646,-0.2646 0.2646,-0.5292 0,-0.7937z"
+      android:strokeLineJoin="round"
+      android:strokeWidth="0.529167"
+      android:fillColor="#00000000"
+      android:strokeColor="#000000"
+      android:strokeLineCap="round"/>
 </vector>

@@ -120,8 +120,9 @@
         <item name="android:navigationBarColor">@color/black</item>
         <item name="iconColor">?android:attr/textColor</item>
 
+        <item name="bottomSheetFilterBackgroundColor">#303030</item>
+
         <!-- Filter Bottom sheet -->
-        <item name="bottomSheetDialogTheme">@style/AppBottomSheetDialogThemeBlack</item>
         <item name="filterSheetBackground">@color/theme_black_primary</item>
         <item name="filterItemBackground">@color/theme_black_primary_light</item>
         <item name="filterItemBackgroundSelected">@color/theme_dark_drawer_row_current</item>

@@ -43,6 +43,7 @@ import com.ichi2.anki.CardUtils.getAllCards
 import com.ichi2.anki.CardUtils.getNotes
 import com.ichi2.anki.CollectionManager.withCol
 import com.ichi2.anki.UIUtils.showThemedToast
+import com.ichi2.anki.browser.*
 import com.ichi2.anki.dialogs.*
 import com.ichi2.anki.dialogs.CardBrowserMySearchesDialog.Companion.newInstance
 import com.ichi2.anki.dialogs.CardBrowserMySearchesDialog.MySearchesDialogListener
@@ -522,6 +523,8 @@ open class CardBrowser :
         filterButton.setOnClickListener {
             modalBottomSheet.show(supportFragmentManager, FilterSheetBottomFragment.TAG)
         }
+
+        setupChips(findViewById(R.id.chip_group))
     }
 
     fun searchWithFilterQuery(filterQuery: String) {
@@ -681,6 +684,8 @@ open class CardBrowser :
         inCardsMode = AnkiDroidApp.getSharedPrefs(this).getBoolean("inCardsMode", true)
         isTruncated = AnkiDroidApp.getSharedPrefs(this).getBoolean("isTruncated", false)
         deckSpinnerSelection!!.initializeActionBarDeckSpinner(this.supportActionBar!!)
+
+        performSearch(lastSearchParameters.copy(deckIds = setOf(deckId)))
         selectDeckAndSave(deckId)
 
         // If a valid value for last deck exists then use it, otherwise use libanki selected deck
@@ -1493,6 +1498,7 @@ open class CardBrowser :
         savedInstanceState.putBoolean("mInMultiSelectMode", isInMultiSelectMode)
         savedInstanceState.putBoolean("mIsTruncated", isTruncated)
         savedInstanceState.putBoolean("inCardsMode", inCardsMode)
+        savedInstanceState.putParcelable("lastSearchParameters", lastSearchParameters)
         super.onSaveInstanceState(savedInstanceState)
     }
 
@@ -1507,7 +1513,8 @@ open class CardBrowser :
         isInMultiSelectMode = savedInstanceState.getBoolean("mInMultiSelectMode")
         isTruncated = savedInstanceState.getBoolean("mIsTruncated")
         inCardsMode = savedInstanceState.getBoolean("inCardsMode")
-        searchCards()
+        val lastSearchParameters = savedInstanceState.retrieveParcelable<SearchParameters>("lastSearchParameters")
+        performSearch(lastSearchParameters ?: SearchParameters.EMPTY)
     }
 
     private fun invalidate() {
@@ -1525,24 +1532,30 @@ open class CardBrowser :
     @RustCleanup("remove card cache; switch to RecyclerView and browserRowForId (#11889)")
     @VisibleForTesting
     fun searchCards() {
-        // cancel the previous search & render tasks if still running
-        invalidate()
+        performSearch(lastSearchParameters.copy(userInput = mSearchTerms))
+    }
+
+    var lastSearchParameters = SearchParameters.EMPTY
+
+    fun performSearch(searchParameters: SearchParameters = this.lastSearchParameters) {
+        Timber.i("CardBrowser:: performSearch(searchParameters=%s)", searchParameters)
+
+        invalidate() // Cancel the previous search & render tasks if still running
+
         if ("" != mSearchTerms && mSearchView != null) {
             mSearchView!!.setQuery(mSearchTerms, false)
             mSearchItem!!.expandActionView()
         }
-        val searchText: String? = if (mSearchTerms.contains("deck:")) {
-            "($mSearchTerms)"
-        } else {
-            if ("" != mSearchTerms) "$mRestrictOnDeck($mSearchTerms)" else mRestrictOnDeck
-        }
-        // clear the existing card list
+
+        updateChips(findViewById(R.id.chip_group), lastSearchParameters, searchParameters)
+
+        lastSearchParameters = searchParameters
+
         mCards.reset()
         cardsAdapter!!.notifyDataSetChanged()
-        val query = searchText!!
         val order = if (mOrder == CARD_ORDER_NONE) NoOrdering() else UseCollectionOrdering()
         launchCatchingTask {
-            val cards = withProgress { searchForCards(query, order, inCardsMode) }
+            val cards = withProgress { searchForCards(searchParameters.toQuery(), order, inCardsMode) }
             // Render the first few items
             for (i in 0 until Math.min(numCardsToRender(), cards.size)) {
                 cards[i].load(false, mColumn1Index, mColumn2Index)

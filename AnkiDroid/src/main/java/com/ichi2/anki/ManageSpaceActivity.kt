@@ -17,6 +17,7 @@
 package com.ichi2.anki
 
 import android.os.Bundle
+import androidx.fragment.app.commit
 
 class ManageSpaceActivity : AnkiActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -25,5 +26,11 @@ class ManageSpaceActivity : AnkiActivity() {
         }
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_manage_space)
+
+        val mainFragment = ManageSpaceFragment()
+
+        supportFragmentManager.commit {
+            add(R.id.manage_space_layout, mainFragment, mainFragment::class.java.simpleName)
+        }
     }
 }

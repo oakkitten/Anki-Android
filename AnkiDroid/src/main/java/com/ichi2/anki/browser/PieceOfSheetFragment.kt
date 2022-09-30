@@ -45,7 +45,7 @@ open class PieceOfSheetFragment : BottomSheetDialogFragmentFix() {
 
         val listRecyclerView = layout.findViewById<RecyclerView>(R.id.list)
 
-        adapter.onItemCheckedListener = { _ -> onItemsSelected(adapter.checkedItemIds) }
+        adapter.onItemCheckedListener = { onItemsSelected(adapter.checkedItemIds) }
         adapter.onItemClickedListener = { id ->
             onItemsSelected(if (id == ALL_ITEMS_ID) emptySet() else setOf(id))
             dismiss()

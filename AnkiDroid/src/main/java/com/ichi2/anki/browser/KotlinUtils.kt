@@ -44,3 +44,19 @@ inline fun <reified T : Parcelable> Bundle.retrieveParcelable(key: String): T? {
         @Suppress("DEPRECATION") getParcelable(key)
     }
 }
+
+inline fun <E> List<E>.forEachWithNext(block: (E, E?) -> Unit) {
+    (0..lastIndex).forEach { idx ->
+        block(this[idx], if (idx == lastIndex) null else this[idx + 1])
+    }
+}
+
+inline fun <E, R> List<E>.mapWithNext(block: (E, E?) -> R): List<R> =
+    ArrayList<R>(size).also { result ->
+        forEachWithNext { current, next ->
+            result.add(block(current, next))
+        }
+    }
+
+infix fun <E> Set<E>.xor(element: E) =
+    if (contains(element)) this - element else this + element

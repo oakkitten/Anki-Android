@@ -74,7 +74,9 @@ private enum class Flags(
 }
 
 private fun Context.getFlagNumberToName(collection: Collection): Map<Int, String> {
-    val flagLabelsJsonObject = collection.conf.getJSONObject("flagLabels")
+    val flagLabelsJsonObject = suppressOrNull<JSONException, _> {
+        collection.conf.getJSONObject("flagLabels")
+    } ?: return emptyMap()
 
     return Flags.values().associate { flag ->
         flag.number to try {
@@ -86,10 +88,8 @@ private fun Context.getFlagNumberToName(collection: Collection): Map<Int, String
 }
 
 fun Context.getFlagName(collection: Collection, number: Int): String {
-    val flagLabelsJsonObject = collection.conf.getJSONObject("flagLabels")
-
     return try {
-        flagLabelsJsonObject.getString(number.toString())
+        collection.conf.getJSONObject("flagLabels").getString(number.toString())
     } catch (e: JSONException) {
         Flags::number.findOrNull(number)?.let { getString(it.nameResource) } ?: "What?"
     }

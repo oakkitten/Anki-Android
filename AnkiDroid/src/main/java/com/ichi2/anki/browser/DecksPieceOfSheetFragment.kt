@@ -21,37 +21,24 @@ import com.ichi2.libanki.DeckManager
 class DecksPieceOfSheetFragment : PieceOfSheetFragment(), CardBrowserFragment {
     override val filterHintResource = R.string.filter_hint_search_decks
 
-    override val layoutResource get() = if (deckRows.size > 10)
-        R.layout.bottom_sheet_list_with_filter else R.layout.bottom_sheet_list_without_filter
-
-    private lateinit var deckRows: List<Row>
-
     override fun onPrepareAdapter() {
         val collection = cardBrowser.col
         val deckManager = collection.decks
         val shouldShowDefaultDeck = shouldShowDefaultDeck(collection)
         val dynamicDeckIds = deckManager.allDynamicDeckIds()
 
-        deckRows = deckManager
+        val deckRows = deckManager
             .getDeckIdToName()
             .filter { shouldShowDefaultDeck || it.first != DEFAULT_DECK_ID }
+            .sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it.second })
             .map { (id, chain) ->
                 val icon = if (id in dynamicDeckIds) R.drawable.ic_deck_filtered else R.drawable.ic_deck
                 Row(id, icon, chain)
-            }.sortedWith(compareBy(java.lang.String.CASE_INSENSITIVE_ORDER) { it.chain })
+            }
 
         adapter.update(
-            sourceItems = deckRows.toSourceItems(filter = "").withItemPrepended(allDecksSourceItem),
+            sourceItems = deckRows.toCheckableSourceItems().withResettingItemPrepended("All decks"),
             checkedItemIds = cardBrowser.lastSearchParameters.deckIds
-        )
-    }
-
-    override fun onFilterInputChanged(filterInput: String) {
-        val deckSourceItems = deckRows.toSourceItems(filterInput)
-
-        adapter.update(
-            sourceItems = deckSourceItems.withItemPrepended(allDecksSourceItem),
-            collapsedItemIds = if (filterInput.isEmpty()) null else emptySet()
         )
     }
 
@@ -61,14 +48,6 @@ class DecksPieceOfSheetFragment : PieceOfSheetFragment(), CardBrowserFragment {
 
     companion object { const val TAG = "DecksPieceOfSheetFragment" }
 }
-
-private val allDecksSourceItem = TreeAdapter.SourceItem(
-    id = ALL_ITEMS_ID,
-    icon = R.drawable.ic_all_items,
-    text = "All decks",
-    indent = 0,
-    checkable = false,
-)
 
 private fun DeckManager.getDeckIdToName(): List<Pair<Long, String>> =
     all().map {

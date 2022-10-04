@@ -60,3 +60,29 @@ inline fun <E, R> List<E>.mapWithNext(block: (E, E?) -> R): List<R> =
 
 infix fun <E> Set<E>.xor(element: E) =
     if (contains(element)) this - element else this + element
+
+inline fun <T> List<T>.forEachReversed(block: (T) -> Unit) {
+    (lastIndex downTo 0).forEach { index ->
+        block(this[index])
+    }
+}
+
+fun <K, V> Map<K, V>.reversed(): Map<V, K> = mutableMapOf<V, K>().also { result ->
+    entries.forEach { result[it.value] = it.key }
+}
+
+fun CharSequence.countNonOverlapping(subString: String): Int {
+    val subStringLength = subString.length
+    var result = 0
+    var startSearchAt = 0
+
+    while (true) {
+        val foundAt = indexOf(subString, startIndex = startSearchAt)
+        if (foundAt == -1) {
+            return result
+        } else {
+            result++
+            startSearchAt = foundAt + subStringLength
+        }
+    }
+}

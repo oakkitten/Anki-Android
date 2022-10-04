@@ -14,61 +14,40 @@
 
 package com.ichi2.anki.browser
 
-import com.ichi2.anki.AnkiActivity
 import com.ichi2.anki.R
 
-// TODO More stable ids
 class TagsPieceOfSheetFragment : PieceOfSheetFragment(), CardBrowserFragment {
     override val filterHintResource = R.string.filter_hint_search_tags
 
-    override val layoutResource get() = if (tagRows.size > 10)
-        R.layout.bottom_sheet_list_with_filter else R.layout.bottom_sheet_list_without_filter
-
-    private lateinit var tagRows: List<Row>
     private lateinit var tagIdToName: Map<Long, String>
 
     override fun onPrepareAdapter() {
-        tagRows = (requireActivity() as AnkiActivity)
+        val tagRows = cardBrowser
             .col.tags.all()
-            .toSortedChainSetWithMissingParentsAdded()
+            .toSortedSetOfChainsWithMissingSubchainsAdded()
             .mapIndexed { index, chain ->
                 val marked = chain.equals("marked", ignoreCase = true)
                 val icon = if (marked) R.drawable.ic_marked else R.drawable.ic_tag
-                Row(id = index.toLong(), icon, chain)
+                Row(id = index.toLong(), icon, chain) // TODO More stable ids
             }
 
         tagIdToName = tagRows.associate { (id, _, chain) -> id to chain }
 
-        val tagNameToId = tagRows.associate { (id, _, chain) -> chain to id }
-
         adapter.update(
-            sourceItems = tagRows.toSourceItems(filter = "").withItemPrepended(allTagsSourceItem),
-            checkedItemIds = tagNameToId.values(cardBrowser.lastSearchParameters.tags)
-        )
-    }
-
-    override fun onFilterInputChanged(filterInput: String) {
-        val tagsSourceItems = tagRows.toSourceItems(filterInput)
-
-        adapter.update(
-            sourceItems = tagsSourceItems.withItemPrepended(allTagsSourceItem),
-            collapsedItemIds = if (filterInput.isEmpty()) null else emptySet()
+            sourceItems = tagRows.toCheckableSourceItems().withResettingItemPrepended("Any tags"),
+            checkedItemIds = tagIdToName.keysBy(values = cardBrowser.lastSearchParameters.tags)
         )
     }
 
     override fun onItemsSelected(ids: Set<Long>) {
-        cardBrowser.performSearch(cardBrowser.lastSearchParameters.copy(tags = tagIdToName.values(ids)))
+        cardBrowser.performSearch(cardBrowser.lastSearchParameters.copy(tags = tagIdToName.valuesBy(keys = ids)))
     }
 
     companion object { const val TAG = "TagsPieceOfSheetFragment" }
 }
 
-private val allTagsSourceItem = TreeAdapter.SourceItem(
-    id = ALL_ITEMS_ID,
-    icon = R.drawable.ic_all_items,
-    text = "Any tags",
-    indent = 0,
-    checkable = false,
-)
+private fun <K, V : Any> Map<K, V>.valuesBy(keys: Set<K>): Set<V> =
+    keys.mapNotNullTo(mutableSetOf()) { this[it] }
 
-private fun <K, V> Map<K, V>.values(keys: Set<K>) = keys.mapNotNull { this[it] }.toSet()
+private fun <K : Any, V> Map<K, V>.keysBy(values: Set<V>): Set<K> =
+    entries.mapNotNullTo(mutableSetOf()) { (key, value) -> if (value in values) key else null }

@@ -25,16 +25,8 @@ class FlagsPieceOfSheetFragment : PieceOfSheetFragment(), CardBrowserFragment {
     override fun onPrepareAdapter() {
         val flagNumberToName = requireContext().getFlagNumberToName(cardBrowser.col)
 
-        val anyFlagsSourceItem = TreeAdapter.SourceItem(
-            id = ALL_ITEMS_ID,
-            icon = R.drawable.ic_all_items,
-            text = "All flags",
-            indent = 0,
-            checkable = false,
-        )
-
         val flagsSourceItems = Flags.values().map { flag ->
-            TreeAdapter.SourceItem(
+            CheckableTreeAdapter.SourceItem(
                 id = flag.number.toLong(),
                 icon = flag.icon,
                 text = flagNumberToName.getOrDefault(flag.number, "What?"),
@@ -44,7 +36,7 @@ class FlagsPieceOfSheetFragment : PieceOfSheetFragment(), CardBrowserFragment {
         }
 
         adapter.update(
-            sourceItems = flagsSourceItems.withItemPrepended(anyFlagsSourceItem),
+            sourceItems = flagsSourceItems.withResettingItemPrepended("All flags"),
             checkedItemIds = cardBrowser.lastSearchParameters.flagNumbers
         )
     }

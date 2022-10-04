@@ -32,155 +32,6 @@ import com.ichi2.anki.R
 import com.ichi2.anki.UIUtils
 import kotlin.reflect.KProperty1
 
-class ItemClickWizard<T : WizardAdapter.Item> : WizardAdapter.Wizard<T>() {
-    var onItemClickedListener: ((Long) -> Unit) = { }
-
-    context(RecyclerView.ViewHolder) override fun makeBuddy(view: View): Nothing? {
-        view.setOnClickListenerWithId { id -> onItemClickedListener(id) }
-        return null
-    }
-}
-
-/**************************************************************************************************/
-
-class IconAndTextWizard<T : IconAndTextWizard.Item>(val context: Context) : WizardAdapter.Wizard<T>() {
-    interface Item : WizardAdapter.Item {
-        val icon: Int
-        val text: CharSequence
-    }
-
-    inner class Buddy(view: View) : WizardAdapter.ViewHolderBuddy<T> {
-        private val textView = view.findViewById<TextView>(R.id.text)
-        private val iconView = view.findViewById<ImageView>(R.id.icon)
-
-        override fun bind(item: T) {
-            textView.text = item.text
-            iconView.setImageDrawable(AppCompatResources.getDrawable(context, item.icon))
-        }
-    }
-
-    context(RecyclerView.ViewHolder) override fun makeBuddy(view: View) = Buddy(view)
-    override val animatableProperties = emptyList<KProperty1<T, *>>()
-}
-
-/**************************************************************************************************/
-
-class CollapseWizard<T : CollapseWizard.Item>(val context: Context) : WizardAdapter.Wizard<T>() {
-    enum class Collapsed { Yes, No, NotCollapsible }
-
-    interface Item : WizardAdapter.Item {
-        val collapsed: Collapsed
-        val indent: Int
-    }
-
-    var onChevronClickedListener: ((Long) -> Unit) = { }
-
-    context(RecyclerView.ViewHolder)
-    inner class Buddy(view: View) : WizardAdapter.ViewHolderBuddy<T> {
-        private val chevron = view.findViewById<ImageView>(R.id.chevron)
-
-        init {
-            chevron.setOnClickListenerWithId { id ->
-                onChevronClickedListener(id)
-            }
-        }
-
-        override fun bind(item: T) {
-            chevron.updateLayoutParams<ViewGroup.MarginLayoutParams> {
-                marginStart = (mandatoryMargin + indentMargin * item.indent).toInt()
-            }
-
-            chevron.animate().cancel()
-
-            when (item.collapsed) {
-                Collapsed.No -> {
-                    chevron.alpha = 1f
-                    chevron.rotation = expandedChevronAngle
-                }
-                Collapsed.Yes -> {
-                    chevron.alpha = 1f
-                    chevron.rotation = collapsedChevronAngle
-                }
-                Collapsed.NotCollapsible -> {
-                    chevron.alpha = 0f
-                }
-            }
-
-            chevron.isClickable = item.collapsed != Collapsed.NotCollapsible
-        }
-
-        override fun animate(item: T) {
-            chevron.animate().apply {
-                when (item.collapsed) {
-                    Collapsed.No -> rotation(expandedChevronAngle).alpha(1f)
-                    Collapsed.Yes -> rotation(collapsedChevronAngle).alpha(1f)
-                    Collapsed.NotCollapsible -> alpha(0f)
-                }
-            }.start()
-
-            chevron.isClickable = item.collapsed != Collapsed.NotCollapsible
-        }
-    }
-
-    private val mandatoryMargin = UIUtils.convertDpToPixel(10f, context)
-    private val indentMargin = UIUtils.convertDpToPixel(24f, context)
-
-    private val expandedChevronAngle = if (context.isRtl) -90f else 90f
-    private val collapsedChevronAngle = 0f
-
-    context(RecyclerView.ViewHolder) override fun makeBuddy(view: View) = Buddy(view)
-    override val animatableProperties = listOf(Item::collapsed)
-
-    companion object {
-        fun <T : Item> filterCollapsedItems(items: Iterable<T>): List<T> {
-            var keepUpToIndent = Int.MAX_VALUE
-
-            return items.filter { item ->
-                val show = item.indent <= keepUpToIndent
-                if (show) {
-                    keepUpToIndent = if (item.collapsed == Collapsed.Yes) item.indent else Int.MAX_VALUE
-                }
-                show
-            }
-        }
-    }
-}
-
-/**************************************************************************************************/
-
-class CheckWizard<T : CheckWizard.Item> : WizardAdapter.Wizard<T>() {
-    enum class Checked { Yes, No, NotCheckable }
-
-    interface Item : WizardAdapter.Item {
-        val checked: Checked
-    }
-
-    var onCheckboxClickedListener: ((Long) -> Unit) = { }
-
-    context(RecyclerView.ViewHolder)
-    inner class Buddy(view: View) : WizardAdapter.ViewHolderBuddy<T> {
-        private val checkbox = view.findViewById<CheckBox>(R.id.checkbox)
-
-        init {
-            checkbox.setOnClickListenerWithId { id ->
-                onCheckboxClickedListener(id)
-            }
-        }
-
-        override fun bind(item: T) {
-            checkbox.isVisible = item.checked != Checked.NotCheckable
-            checkbox.isChecked = item.checked == Checked.Yes
-        }
-    }
-
-    context(RecyclerView.ViewHolder) override fun makeBuddy(view: View) = Buddy(view)
-    override val animatableProperties = listOf(Item::checked)
-}
-
-/**************************************************************************************************
- **************************************************************************************************
- **************************************************************************************************/
-
 abstract class WizardAdapter<T : WizardAdapter.Item>(
     context: Context,
     private val itemLayoutResource: Int,
@@ -264,6 +115,181 @@ abstract class WizardAdapter<T : WizardAdapter.Item>(
     }
 
     private val inflater: LayoutInflater = LayoutInflater.from(context)
+}
+
+/**************************************************************************************************
+ **************************************************************************************************
+ **************************************************************************************************/
+
+class ItemClickWizard<T : WizardAdapter.Item> : WizardAdapter.Wizard<T>() {
+    var onItemClickedListener: ((Long) -> Unit) = { }
+
+    context(RecyclerView.ViewHolder) override fun makeBuddy(view: View): Nothing? {
+        view.setOnClickListenerWithId { id -> onItemClickedListener(id) }
+        return null
+    }
+}
+
+/**************************************************************************************************/
+
+class IconAndTextWizard<T : IconAndTextWizard.Item>(val context: Context) : WizardAdapter.Wizard<T>() {
+    interface Item : WizardAdapter.Item {
+        val icon: Int
+        val text: CharSequence
+    }
+
+    inner class Buddy(view: View) : WizardAdapter.ViewHolderBuddy<T> {
+        private val textView = view.findViewById<TextView>(R.id.text)
+        private val iconView = view.findViewById<ImageView>(R.id.icon)
+
+        override fun bind(item: T) {
+            textView.text = item.text
+            iconView.setImageDrawable(AppCompatResources.getDrawable(context, item.icon))
+        }
+    }
+
+    context(RecyclerView.ViewHolder) override fun makeBuddy(view: View) = Buddy(view)
+    override val animatableProperties = emptyList<KProperty1<T, *>>()
+}
+
+/**************************************************************************************************/
+
+class CheckWizard<T : CheckWizard.Item> : WizardAdapter.Wizard<T>() {
+    enum class Checked { Yes, No, NotCheckable }
+
+    interface Item : WizardAdapter.Item {
+        val checked: Checked
+    }
+
+    var onCheckboxClickedListener: ((Long) -> Unit) = { }
+
+    context(RecyclerView.ViewHolder)
+    inner class Buddy(view: View) : WizardAdapter.ViewHolderBuddy<T> {
+        private val checkbox = view.findViewById<CheckBox>(R.id.checkbox)
+
+        init {
+            checkbox.setOnClickListenerWithId { id ->
+                onCheckboxClickedListener(id)
+            }
+        }
+
+        override fun bind(item: T) {
+            checkbox.isVisible = item.checked != Checked.NotCheckable
+            checkbox.isChecked = item.checked == Checked.Yes
+        }
+    }
+
+    context(RecyclerView.ViewHolder) override fun makeBuddy(view: View) = Buddy(view)
+    override val animatableProperties = listOf(Item::checked)
+}
+
+/**************************************************************************************************/
+
+class CollapseWizard<T : CollapseWizard.Item>(val context: Context) : WizardAdapter.Wizard<T>() {
+    enum class Collapsed { Yes, No, NotCollapsible }
+
+    interface Item : WizardAdapter.Item {
+        val collapsed: Collapsed
+        val indent: Int
+    }
+
+    var onChevronClickedListener: ((Long) -> Unit) = { }
+
+    context(RecyclerView.ViewHolder)
+    inner class Buddy(view: View) : WizardAdapter.ViewHolderBuddy<T> {
+        private val chevron = view.findViewById<ImageView>(R.id.chevron)
+
+        init {
+            chevron.setOnClickListenerWithId { id ->
+                onChevronClickedListener(id)
+            }
+        }
+
+        override fun bind(item: T) {
+            chevron.updateLayoutParams<ViewGroup.MarginLayoutParams> {
+                marginStart = (mandatoryMargin + indentMargin * item.indent).toInt()
+            }
+
+            chevron.animate().cancel()
+
+            when (item.collapsed) {
+                Collapsed.No -> {
+                    chevron.alpha = 1f
+                    chevron.rotation = expandedChevronAngle
+                }
+                Collapsed.Yes -> {
+                    chevron.alpha = 1f
+                    chevron.rotation = collapsedChevronAngle
+                }
+                Collapsed.NotCollapsible -> {
+                    chevron.alpha = 0f
+                }
+            }
+
+            chevron.isClickable = item.collapsed != Collapsed.NotCollapsible
+        }
+
+        override fun animate(item: T) {
+            chevron.animate().apply {
+                when (item.collapsed) {
+                    Collapsed.No -> rotation(expandedChevronAngle).alpha(1f)
+                    Collapsed.Yes -> rotation(collapsedChevronAngle).alpha(1f)
+                    Collapsed.NotCollapsible -> alpha(0f)
+                }
+            }.setDuration(0).start()
+
+            chevron.isClickable = item.collapsed != Collapsed.NotCollapsible
+        }
+    }
+
+    private val mandatoryMargin = UIUtils.convertDpToPixel(10f, context)
+    private val indentMargin = UIUtils.convertDpToPixel(24f, context)
+
+    private val expandedChevronAngle = if (context.isRtl) -90f else 90f
+    private val collapsedChevronAngle = 0f
+
+    context(RecyclerView.ViewHolder) override fun makeBuddy(view: View) = Buddy(view)
+    override val animatableProperties = listOf(Item::collapsed)
+
+    companion object {
+        fun <T : Item> filterCollapsedItems(items: Iterable<T>): List<T> {
+            var keepUpToIndent = Int.MAX_VALUE
+
+            return items.filter { item ->
+                if (item.indent <= keepUpToIndent) {
+                    keepUpToIndent = if (item.collapsed == Collapsed.Yes) item.indent else Int.MAX_VALUE
+                    true
+                } else {
+                    false
+                }
+            }
+        }
+    }
+}
+
+/**************************************************************************************************/
+
+object TreeFilteringWitch {
+    interface Item : WizardAdapter.Item {
+        val indent: Int
+    }
+
+    fun <T : Item> filterItems(items: List<T>, predicate: (T) -> Boolean): List<T> =
+        mutableListOf<T>().apply {
+            var addIfIndentBelow = -1
+
+            items.forEachReversed { item ->
+                if (item.indent < addIfIndentBelow) {
+                    add(item)
+                    addIfIndentBelow--
+                } else if (predicate(item)) {
+                    add(item)
+                    addIfIndentBelow = item.indent
+                }
+            }
+
+            reverse()
+        }
 }
 
 /**************************************************************************************************

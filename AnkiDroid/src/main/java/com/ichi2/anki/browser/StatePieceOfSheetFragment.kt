@@ -19,7 +19,7 @@ import com.ichi2.anki.R
 class StatePieceOfSheetFragment : PieceOfSheetFragment(), CardBrowserFragment {
     override fun onPrepareAdapter() {
         val stateItems = State.values().map { state ->
-            TreeAdapter.SourceItem(
+            CheckableTreeAdapter.SourceItem(
                 id = state.id,
                 icon = state.icon,
                 text = state.label,
@@ -29,26 +29,18 @@ class StatePieceOfSheetFragment : PieceOfSheetFragment(), CardBrowserFragment {
         }
 
         adapter.update(
-            sourceItems = stateItems.withItemPrepended(anyCardsSourceItem),
-            checkedItemIds = cardBrowser.lastSearchParameters.states.map { it.id }.toSet()
+            sourceItems = stateItems.withResettingItemPrepended("Any cards"),
+            checkedItemIds = cardBrowser.lastSearchParameters.states.map(State::id).toSet()
         )
     }
 
     override fun onItemsSelected(ids: Set<Long>) {
-        val state = ids.mapNotNull { id -> State::id.findOrNull(id) }.toSet()
+        val state = ids.mapNotNull(State::id::findOrNull).toSet()
         cardBrowser.performSearch(cardBrowser.lastSearchParameters.copy(states = state))
     }
 
     companion object { const val TAG = "StatePieceOfSheetFragment" }
 }
-
-private val anyCardsSourceItem = TreeAdapter.SourceItem(
-    id = ALL_ITEMS_ID,
-    icon = R.drawable.ic_all_items,
-    text = "Any cards",
-    indent = 0,
-    checkable = false,
-)
 
 enum class State(
     val id: Long,

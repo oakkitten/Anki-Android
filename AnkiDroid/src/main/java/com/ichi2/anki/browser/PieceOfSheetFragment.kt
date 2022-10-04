@@ -29,14 +29,15 @@ import com.ichi2.anki.CardBrowser
 import com.ichi2.anki.R
 
 open class PieceOfSheetFragment : BottomSheetDialogFragmentFix() {
-    open val layoutResource = R.layout.bottom_sheet_list_without_filter
+    open val layoutResource get() = if (adapter.itemCount > 12)
+        R.layout.bottom_sheet_list_with_filter else R.layout.bottom_sheet_list_without_filter
     open val filterHintResource: Int? = null
 
-    protected lateinit var adapter: TreeAdapter
+    protected lateinit var adapter: CheckableTreeAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        adapter = TreeAdapter(requireContext())
+        adapter = CheckableTreeAdapter(requireContext())
         onPrepareAdapter()
     }
 
@@ -61,7 +62,7 @@ open class PieceOfSheetFragment : BottomSheetDialogFragmentFix() {
             clearFilterButton.setOnClickListener { filterEditText.setText("") }
 
             filterEditText.addOnChangeListener { before, after ->
-                onFilterInputChanged(after)
+                adapter.update(filterInput = after, collapsedItemIds = emptySet())
 
                 when {
                     before.isEmpty() && after.isNotEmpty() ->
@@ -81,8 +82,6 @@ open class PieceOfSheetFragment : BottomSheetDialogFragmentFix() {
     }
 
     open fun onPrepareAdapter() {}
-
-    open fun onFilterInputChanged(filterInput: String) {}
 
     open fun onItemsSelected(ids: Set<Long>) {}
 }

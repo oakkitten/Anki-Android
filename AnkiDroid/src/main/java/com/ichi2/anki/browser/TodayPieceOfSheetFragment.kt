@@ -19,7 +19,7 @@ import com.ichi2.anki.R
 class TodayPieceOfSheetFragment : PieceOfSheetFragment(), CardBrowserFragment {
     override fun onPrepareAdapter() {
         val todayItems = Today.values().map { today ->
-            TreeAdapter.SourceItem(
+            CheckableTreeAdapter.SourceItem(
                 id = today.id,
                 icon = R.drawable.ic_clock,
                 text = today.label,
@@ -29,26 +29,18 @@ class TodayPieceOfSheetFragment : PieceOfSheetFragment(), CardBrowserFragment {
         }
 
         adapter.update(
-            sourceItems = todayItems.withItemPrepended(anyCardsSourceItem),
-            checkedItemIds = cardBrowser.lastSearchParameters.todays.map { it.id }.toSet()
+            sourceItems = todayItems.withResettingItemPrepended("Any cards"),
+            checkedItemIds = cardBrowser.lastSearchParameters.todays.map(Today::id).toSet()
         )
     }
 
     override fun onItemsSelected(ids: Set<Long>) {
-        val today = ids.mapNotNull { id -> Today::id.findOrNull(id) }.toSet()
-        cardBrowser.performSearch(cardBrowser.lastSearchParameters.copy(todays = today))
+        val todays = ids.mapNotNull(Today::id::findOrNull).toSet()
+        cardBrowser.performSearch(cardBrowser.lastSearchParameters.copy(todays = todays))
     }
 
     companion object { const val TAG = "TodayPieceOfSheetFragment" }
 }
-
-private val anyCardsSourceItem = TreeAdapter.SourceItem(
-    id = ALL_ITEMS_ID,
-    icon = R.drawable.ic_all_items,
-    text = "Any cards",
-    indent = 0,
-    checkable = false,
-)
 
 enum class Today(
     val id: Long,

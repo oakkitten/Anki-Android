@@ -217,18 +217,18 @@
         is not used. E.g. “Collection: default” would mean that the default server,
         that is AnkiWeb, will be used for synchronization.">default</string>
     <string name="custom_sync_server_help"><![CDATA[
-        As an alternative to using AnkiWeb,
-        you can use your own servers for synchronization between devices.
-        You can specify either of the servers, or both;
-        if not set, the default AnkiWeb server will be used instead.
+        As an alternative to synchronizing with AnkiWeb,
+        you may use your own servers for synchronization.
+        You may specify either collection or media server, or both.
+        If not set, the default AnkiWeb servers will be used instead.
         For example, you could use the sync server built into Anki
-        to synchronize the collection while you are off the grid,
-        and AnkiWeb to synchronize media while online.
+        Desktop to sync the collection when you only have a local network,
+        and AnkiWeb to sync media when you have general internet access.
         <a href="https://docs.ankidroid.org/#_custom_sync_server">Learn more</a>
         <br>
-        <br>Note that unlike in older AnkiDroid versions,
-        now you have to specify the full custom sync URL,
-        e.g. https://example.com:8080/sync/.]]></string>
+        <br>Note: unlike in previous AnkiDroid versions,
+        you must specify the full custom sync URL,
+        for example: https://example.com:8080/sync/.]]></string>
     <string name="custom_sync_server_base_url_title" maxLength="41">Sync url</string>
     <string name="custom_sync_server_media_url_title" maxLength="41">Media sync url</string>
     <!-- Key Bindings -->

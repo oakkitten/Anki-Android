@@ -224,11 +224,13 @@
         For example, you could use the sync server built into Anki
         Desktop to sync the collection when you only have a local network,
         and AnkiWeb to sync media when you have general internet access.
-        <a href="https://docs.ankidroid.org/#_custom_sync_server">Learn more</a>
+        <a href="${custom_sync_server_help_learn_more_url}">Learn more</a>
         <br>
         <br>Note: unlike in previous AnkiDroid versions,
         you must specify the full custom sync URL,
         for example: https://example.com:8080/sync/.]]></string>
+    <string name="custom_sync_server_help_learn_more_url">https://docs.ankidroid.org/#_custom_sync_server</string>
+
     <string name="custom_sync_server_base_url_title" maxLength="41">Sync url</string>
     <string name="custom_sync_server_media_url_title" maxLength="41">Media sync url</string>
     <!-- Key Bindings -->

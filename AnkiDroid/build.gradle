@@ -8,6 +8,7 @@ apply plugin: 'app.brant.amazonappstorepublisher'
 apply plugin: 'idea'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-parcelize'
+apply plugin: 'com.likethesalad.stem' // https://github.com/LikeTheSalad/android-stem
 
 
 repositories {

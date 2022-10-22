@@ -20,6 +20,7 @@ import android.app.Activity
 import android.content.Context
 import android.view.WindowManager
 import android.view.WindowManager.BadTokenException
+import androidx.annotation.StringRes
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.coroutineScope
@@ -214,7 +215,7 @@ suspend fun <T> FragmentActivity.withProgress(
  * Starts the progress dialog after 600ms so that quick operations don't just show
  * flashes of a dialog.
  */
-suspend fun <T> FragmentActivity.withProgress(
+suspend fun <T> Activity.withProgress(
     message: String = resources.getString(R.string.dialog_processing),
     op: suspend () -> T
 ): T = withProgressDialog(
@@ -226,9 +227,21 @@ suspend fun <T> FragmentActivity.withProgress(
     op()
 }
 
+/** @see withProgress(String, ...) */
+suspend fun <T> Fragment.withProgress(message: String, block: suspend () -> T): T =
+    requireActivity().withProgress(message, block)
+
+/** @see withProgress(String, ...) */
+suspend fun <T> Activity.withProgress(@StringRes messageResource: Int, block: suspend () -> T): T =
+    withProgress(resources.getString(messageResource), block)
+
+/** @see withProgress(String, ...) */
+suspend fun <T> Fragment.withProgress(@StringRes messageResource: Int, block: suspend () -> T): T =
+    requireActivity().withProgress(messageResource, block)
+
 @Suppress("Deprecation") // ProgressDialog deprecation
 private suspend fun <T> withProgressDialog(
-    context: FragmentActivity,
+    context: Activity,
     onCancel: (() -> Unit)?,
     op: suspend (android.app.ProgressDialog) -> T
 ): T = coroutineScope {

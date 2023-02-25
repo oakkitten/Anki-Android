@@ -2912,8 +2912,8 @@ open class DeckPicker :
                 lifecycleScope.launch {
                     while (migrationService.instance?.totalToTransfer != null) {
                         migrationProgressViewModel.migrationProgressFlow.value = MigrationProgress(
-                            service.currentProgress.toMB(),
-                            totalToTransfer.toMB()
+                            service.currentProgress,
+                            totalToTransfer
                         )
                         delay(100)
                     }

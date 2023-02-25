@@ -19,6 +19,7 @@ package com.ichi2.anki.dialogs
 import android.app.AlertDialog
 import android.app.Dialog
 import android.os.Bundle
+import android.text.format.Formatter.formatShortFileSize
 import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.fragment.app.DialogFragment
@@ -31,34 +32,34 @@ import com.ichi2.anki.R
 import com.ichi2.anki.viewmodels.MigrationProgressViewModel
 import kotlinx.coroutines.launch
 
-class MigrationProgressDialogFragment :
-    DialogFragment() {
+class MigrationProgressDialogFragment : DialogFragment() {
+
     private val progressViewModel by activityViewModels<MigrationProgressViewModel>()
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-        val messageTextView: TextView
-        val progressBar: ProgressBar
-        val progressView =
-            requireActivity().layoutInflater.inflate(R.layout.indeterminate_progress_bar, null)
-        progressBar = progressView.findViewById(R.id.indeterminate_progressBar)
-        messageTextView = progressView.findViewById(R.id.migration_text)
+        val layout = requireActivity().layoutInflater.inflate(R.layout.indeterminate_progress_bar, null)
+        val progressBar = layout.findViewById<ProgressBar>(R.id.indeterminate_progressBar)
+        val textView = layout.findViewById<TextView>(R.id.migration_text)
+
+        progressBar.max = Int.MAX_VALUE
 
         lifecycleScope.launch {
             lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 progressViewModel.migrationProgressFlow.collect { state ->
-                    progressBar.max = state.totalMb
-                    progressBar.progress = state.transferredMb
-                    messageTextView.text = resources.getString(
-                        R.string.scoped_storage_migration_progress
-                    )
+                    val progressRatio = state.transferredBytes.toFloat() / state.totalBytes
+
+                    val transferredSizeText = formatShortFileSize(requireContext(), state.transferredBytes)
+                    val totalSizeText = formatShortFileSize(requireContext(), state.totalBytes)
+
+                    progressBar.progress = (progressRatio * Int.MAX_VALUE).toInt()
+                    textView.text = "Migrated $transferredSizeText of $totalSizeText"
                 }
             }
         }
+
         return AlertDialog.Builder(activity)
-            .setView(progressView)
-            .setPositiveButton(R.string.dialog_ok) { _, _ ->
-                dismiss()
-            }
+            .setView(layout)
+            .setPositiveButton(R.string.dialog_ok) { _, _ -> dismiss() }
             .setNegativeButton(R.string.scoped_storage_learn_more) { _, _ ->
                 (requireActivity() as AnkiActivity).openUrl(R.string.link_scoped_storage_faq)
             }
@@ -66,4 +67,4 @@ class MigrationProgressDialogFragment :
     }
 }
 
-data class MigrationProgress(val transferredMb: Int, val totalMb: Int)
+data class MigrationProgress(val transferredBytes: Long, val totalBytes: Long)

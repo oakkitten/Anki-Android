@@ -39,7 +39,6 @@ import android.view.*
 import android.view.View.OnLongClickListener
 import android.view.WindowManager.BadTokenException
 import android.widget.*
-import androidx.activity.viewModels
 import androidx.annotation.StringRes
 import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AlertDialog
@@ -52,7 +51,6 @@ import androidx.core.content.pm.ShortcutInfoCompat
 import androidx.core.content.pm.ShortcutManagerCompat
 import androidx.core.graphics.drawable.IconCompat
 import androidx.fragment.app.commit
-import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -91,12 +89,10 @@ import com.ichi2.anki.servicelayer.ScopedStorageService
 import com.ichi2.anki.servicelayer.ScopedStorageService.isLegacyStorage
 import com.ichi2.anki.servicelayer.ScopedStorageService.userMigrationIsInProgress
 import com.ichi2.anki.servicelayer.Undo
-import com.ichi2.anki.servicelayer.scopedstorage.migrateuserdata.toMB
 import com.ichi2.anki.services.MigrationService
 import com.ichi2.anki.services.ServiceConnection
 import com.ichi2.anki.snackbar.showSnackbar
 import com.ichi2.anki.stats.AnkiStatsTaskHandler
-import com.ichi2.anki.viewmodels.MigrationProgressViewModel
 import com.ichi2.anki.web.HostNumFactory
 import com.ichi2.anki.widgets.DeckAdapter
 import com.ichi2.annotations.NeedsTest
@@ -206,9 +202,6 @@ open class DeckPicker :
     private var mStartupError = false
     private var mEmptyCardTask: Cancellable? = null
 
-    // MigrationProgress Dialog state flow viewModel
-    private val migrationProgressViewModel by viewModels<MigrationProgressViewModel>()
-
     /** See [OptionsMenuState]. */
     @VisibleForTesting
     var optionsMenuState: OptionsMenuState? = null
@@ -244,10 +237,12 @@ open class DeckPicker :
 
     private val migrationService: ServiceConnection<MigrationService> = object : ServiceConnection<MigrationService>() {
         override fun onServiceConnected(service: MigrationService) {
-            service.migrationCompletedListener = { onStorageMigrationCompleted() }
+            // TODO Add back whatever this was doing
+            // service.migrationCompletedListener = { onStorageMigrationCompleted() }
         }
         override fun onServiceDisconnected(service: MigrationService) {
-            service.migrationCompletedListener = null
+            // TODO Add back whatever this was doing
+            // service.migrationCompletedListener = null
         }
     }
 
@@ -2906,22 +2901,7 @@ open class DeckPicker :
      * Show a dialog that explains no sync can occur during migration.
      */
     private fun warnNoSyncDuringMigration() {
-        // TODO: maybe handle onStorageMigrationCompleted()
-        migrationService.instance?.let { service ->
-            service.totalToTransfer?.let { totalToTransfer ->
-                lifecycleScope.launch {
-                    while (migrationService.instance?.totalToTransfer != null) {
-                        migrationProgressViewModel.migrationProgressFlow.value = MigrationProgress(
-                            service.currentProgress,
-                            totalToTransfer
-                        )
-                        delay(100)
-                    }
-                }
-            }
-        }
-        val progressDialog = MigrationProgressDialogFragment()
-        progressDialog.show(supportFragmentManager, "MigrationProgressDialogFragment")
+        MigrationProgressDialogFragment().show(supportFragmentManager, "MigrationProgressDialogFragment")
     }
 
     /**

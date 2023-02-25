@@ -492,7 +492,7 @@ open class MigrateUserData protected constructor(val source: Directory, val dest
      * @throws AggregateException If multiple exceptions were thrown when executing
      * @throws RuntimeException Various other failings if only a single exception was thrown
      */
-    fun migrateFiles(progressListener: MigrationProgressListener): Boolean {
+    fun migrateFiles(progressListener: MigrationProgressListener) {
         val context = initializeContext(progressListener)
 
         // define the function here, so we can execute it on retry
@@ -520,8 +520,6 @@ open class MigrateUserData protected constructor(val source: Directory, val dest
 
         // we are successfully migrated here
         // TODO: fix "conflicts" - check to see if conflicts are due to partially copied files in the destination
-
-        return true
     }
 
     @VisibleForTesting

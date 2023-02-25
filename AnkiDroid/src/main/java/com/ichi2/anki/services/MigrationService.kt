@@ -16,13 +16,14 @@
 
 package com.ichi2.anki.services
 
+import android.app.Notification
 import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.os.Binder
 import android.os.IBinder
+import android.text.format.Formatter
 import androidx.core.app.NotificationCompat
-import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.edit
 import com.ichi2.anki.*
 import com.ichi2.anki.servicelayer.ScopedStorageService.PREF_MIGRATION_DESTINATION
@@ -30,164 +31,37 @@ import com.ichi2.anki.servicelayer.ScopedStorageService.PREF_MIGRATION_SOURCE
 import com.ichi2.anki.servicelayer.scopedstorage.MigrateEssentialFiles
 import com.ichi2.anki.servicelayer.scopedstorage.MoveConflictedFile
 import com.ichi2.anki.servicelayer.scopedstorage.migrateuserdata.MigrateUserData
-import com.ichi2.anki.servicelayer.scopedstorage.migrateuserdata.NumberOfBytes
-import com.ichi2.anki.servicelayer.scopedstorage.migrateuserdata.toKB
-import com.ichi2.anki.servicelayer.scopedstorage.migrateuserdata.toMB
-import com.ichi2.compat.CompatHelper.Companion.compat
 import com.ichi2.utils.FileUtil
-import com.ichi2.utils.Repeater
-import com.ichi2.utils.runOnUiThread
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.io.File
 import kotlin.concurrent.thread
+import kotlin.coroutines.EmptyCoroutineContext
 
 /**
  * A service which migrates the AnkiDroid collection from a legacy directory to an app-specific directory.
  */
 class MigrationService : Service() {
-    private lateinit var migrateUserDataTask: MigrateUserData
-    private lateinit var migrateDataThread: Thread
-    private lateinit var notificationUpdater: Repeater
+
+    interface Progress {
+        object CalculatingTransferSize : Progress
+
+        data class Transferring(val transferredBytes: Long, val totalBytes: Long) : Progress
+
+        interface Done : Progress
+        object Success : Done
+        data class Failure(val e: Exception) : Done
+    }
+
+    var flowOfProgress: MutableStateFlow<Progress> = MutableStateFlow(Progress.CalculatingTransferSize)
+
     private var isStarted = false
 
-    /** the current progress (may be ahead of the notification) */
-    var currentProgress: NumberOfBytes = 0
-        private set
-
-    /** the current progress which is displayed on the notification */
-    var notificationDisplayedProgress: NumberOfBytes = 0
-        private set
-
-    /**
-     * The total bytes required to be transferred. 0 on error
-     * Note: currently this is recalculated each time the service is started
-     */
-    var totalToTransfer: NumberOfBytes? = null
-        private set
-
-    var migrationCompletedListener: (() -> Unit)? = null
-
-    private inner class MigrateUserDataProgressListener(val context: Context) {
-        private var notification: Notification? = null
-
-        fun initNotification(totalToTransfer: NumberOfBytes?) {
-            // startForeground must be called within 5 seconds. Otherwise a crash occurs:
-            // `Context.startForegroundService() did not then call Service.startForeground()`
-            val sourceSize = totalToTransfer ?: 0 // TODO: error handling
-            notification = Notification.createInstance(context, sourceSize).also {
-                Timber.i("Running in foreground with notification")
-                startForeground(it.id, it.build())
-            }
-
-            notificationUpdater = Repeater.createAndStart(delayMs = 2000L) {
-                notificationDisplayedProgress = currentProgress
-                notification?.notifyUpdate(currentProgress)
-            }
-        }
-
-        fun onProgressUpdate(value: NumberOfBytes?) {
-            /** @see notificationUpdater for where this is used */
-            currentProgress += value ?: 0
-        }
-
-        fun onResult(result: Boolean) {
-            if (result) {
-                Timber.i("Marking migration as completed")
-                AnkiDroidApp.getSharedPrefs(context).edit {
-                    remove(PREF_MIGRATION_DESTINATION)
-                    remove(PREF_MIGRATION_SOURCE)
-                }
-                migrationCompletedListener?.invoke()
-            }
-            notification?.notifyCompletion(result)
-
-            // display a toast to the user.
-            displayMigrationCompleted(result)
-            stopSelf()
-        }
-
-        private fun displayMigrationCompleted(result: Boolean) {
-            // TODO: This should be discussed
-            val message =
-                if (result) R.string.migration_successful_message else R.string.migration_failed_message
-
-            // fixes: "Can't toast on a thread that has not called Looper.prepare()"
-            runOnUiThread {
-                UIUtils.showThemedToast(context, message, true)
-            }
-        }
-
-        fun onError(e: Exception) {
-            notificationUpdater.terminate()
-            notification?.notifyError(e)
-        }
-    }
-
-    private class Notification private constructor(
-        private val context: Context,
-        private val manager: NotificationManagerCompat,
-        private val sourceSize: NumberOfBytes
-    ) {
-        private var notificationBuilder: NotificationCompat.Builder = NotificationCompat.Builder(
-            context,
-            Channel.SCOPED_STORAGE_MIGRATION.id
-        )
-            .setSmallIcon(R.drawable.ic_star_notify)
-            .setContentTitle(context.resources.getString(R.string.migrating_data_message))
-            .setContentText(context.resources.getString(R.string.migration_transferred_size, 0f, sourceSize / 1024f))
-            .setPriority(NotificationCompat.PRIORITY_LOW)
-            .setOngoing(true)
-            .setSilent(true)
-            .setProgress(100, 0, false)
-
-        /** The id of the notification for in-progress user data migration. */
-        val id = 2
-
-        fun build() = this.notificationBuilder.build()
-        fun notifyUpdate(currentProgress: NumberOfBytes) {
-            Timber.v("update: %d", currentProgress)
-            notificationBuilder.setProgress(sourceSize.toKB(), currentProgress.toKB(), false)
-            notificationBuilder.setContentText(
-                context.resources.getString(
-                    R.string.migration_transferred_size,
-                    currentProgress.toMB().toFloat(),
-                    sourceSize.toMB().toFloat()
-                )
-            )
-            manager.notify(id, notificationBuilder.build())
-        }
-
-        fun notifyCompletion(result: Boolean) {
-            val titleRes = if (result) R.string.migration_successful_message else R.string.migration_failed_message
-            val notificationTitle = context.resources.getString(titleRes)
-            notificationBuilder.setContentTitle(notificationTitle)
-                .setOngoing(false)
-                .hideProgressBar()
-            manager.notify(id, notificationBuilder.build())
-        }
-
-        fun notifyError(e: Exception) {
-            // TODO: Add a button for 'Get Help'
-            val copyIntent = IntentHandler.copyStringToClipboardIntent(this.context, e.toString())
-
-            val copyDebugIntent = compat.getImmutableActivityIntent(this.context, COPY_DEBUG, copyIntent, 0)
-            notificationBuilder.setContentTitle(context.getString(R.string.migration_failed_message))
-                .setContentText(e.toString())
-                .setOngoing(false)
-                .hideProgressBar()
-                .addAction(R.drawable.ic_star_notify, context.getString(R.string.feedback_copy_debug), copyDebugIntent)
-
-            manager.notify(id, notificationBuilder.build())
-        }
-
-        companion object {
-            const val COPY_DEBUG: Int = 1
-            fun createInstance(context: Context, sourceSize: NumberOfBytes): Notification {
-                val notificationManager = NotificationManagerCompat.from(context)
-                return Notification(context, notificationManager, sourceSize)
-            }
-        }
-    }
+    // TODO Test cancellation
+    private val lifecycleScope = CoroutineScope(EmptyCoroutineContext)
 
     private fun getRestartBehavior() = START_STICKY
 
@@ -217,17 +91,36 @@ class MigrationService : Service() {
             return getRestartBehavior()
         }
 
-        this.migrateUserDataTask = migrateUserDataTask
-        this.migrateDataThread = thread(name = "Storage Migration") {
-            this.totalToTransfer = getRemainingTransferSize(migrateUserDataTask)
-            val listener = MigrateUserDataProgressListener(this)
-            listener.initNotification(totalToTransfer)
+        // TODO Use a coroutine here?
+        thread(name = "Storage Migration") {
+            flowOfProgress.tryEmit(Progress.CalculatingTransferSize)
+
             try {
-                val result = migrateUserDataTask.migrateFiles { bytesTransferred -> listener.onProgressUpdate(bytesTransferred) }
-                listener.onResult(result)
+                var transferredBytes = 0L
+                val totalBytesToTransfer = getRemainingTransferSize(migrateUserDataTask)
+                migrateUserDataTask.migrateFiles(progressListener = { deltaTransferredBytes ->
+                    transferredBytes += deltaTransferredBytes
+                    flowOfProgress.tryEmit(Progress.Transferring(transferredBytes, totalBytesToTransfer))
+                })
+                flowOfProgress.tryEmit(Progress.Success)
             } catch (e: Exception) {
                 CrashReportService.sendExceptionReport(e, "Storage Migration Failed")
-                listener.onError(e)
+                flowOfProgress.tryEmit(Progress.Failure(e))
+            }
+        }
+
+        lifecycleScope.launch {
+            flowOfProgress.collect { progress ->
+                startForeground(2, makeMigrationProgressNotification(progress))
+
+                if (progress == Progress.Success) {
+                    AnkiDroidApp.getSharedPrefs(this@MigrationService).edit {
+                        remove(PREF_MIGRATION_DESTINATION)
+                        remove(PREF_MIGRATION_SOURCE)
+                    }
+                    UIUtils.showThemedToast(this@MigrationService, R.string.migration_successful_message, true)
+                    stopSelf()
+                }
             }
         }
 
@@ -236,26 +129,24 @@ class MigrationService : Service() {
 
     override fun onDestroy() {
         Timber.d("onDestroy")
-        if (::migrateUserDataTask.isInitialized) { migrateUserDataTask.executor.terminate() }
-        if (::notificationUpdater.isInitialized) { notificationUpdater.terminate() }
-        super.onDestroy()
+        lifecycleScope.coroutineContext.cancel()
+
+        // TODO: Why the below line was necessary?
+        // if (::migrateUserDataTask.isInitialized) { migrateUserDataTask.executor.terminate() }
     }
 
-    private fun getRemainingTransferSize(
-        task: MigrateUserData
-    ): NumberOfBytes? {
-        return try {
-            val ignoredFiles = MigrateEssentialFiles.iterateEssentialFiles(task.source) +
-                File(task.source.directory, MoveConflictedFile.CONFLICT_DIRECTORY)
-            val ignoredSpace = ignoredFiles.sumOf { FileUtil.getSize(it) }
-            val folderSize = FileUtil.DirectoryContentInformation.fromDirectory(task.source.directory).totalBytes
-            val remainingSpaceToMigrate = folderSize - ignoredSpace
-            Timber.d("folder size: %d, safe: %d, remaining: %d", folderSize, ignoredSpace, remainingSpaceToMigrate)
-            return remainingSpaceToMigrate
-        } catch (e: Exception) {
-            Timber.w(e, "Failed to get directory size")
-            null
-        }
+    // TODO This is inadequate, instead of calculating the remaining transfer size
+    //   every time migration is started,
+    //   we should be calculating this size only when starting migration for the first time,
+    //   and keeping track of the transferred and the remaining files.
+    private fun getRemainingTransferSize(task: MigrateUserData): Long {
+        val ignoredFiles = MigrateEssentialFiles.iterateEssentialFiles(task.source) +
+            File(task.source.directory, MoveConflictedFile.CONFLICT_DIRECTORY)
+        val ignoredSpace = ignoredFiles.sumOf { FileUtil.getSize(it) }
+        val folderSize = FileUtil.DirectoryContentInformation.fromDirectory(task.source.directory).totalBytes
+        val remainingSpaceToMigrate = folderSize - ignoredSpace
+        Timber.d("folder size: %d, safe: %d, remaining: %d", folderSize, ignoredSpace, remainingSpaceToMigrate)
+        return remainingSpaceToMigrate
     }
 
     /**
@@ -265,13 +156,47 @@ class MigrationService : Service() {
      * See: https://developer.android.com/guide/components/bound-services#Binder
      */
     inner class LocalBinder : Binder(), SimpleBinder<MigrationService> {
-        @Suppress("unused")
         override fun getService(): MigrationService = this@MigrationService
     }
 
     override fun onBind(intent: Intent): IBinder = LocalBinder()
 }
 
-/** Hides a progress bar if previously shown on a notification */
-private fun NotificationCompat.Builder.hideProgressBar(): NotificationCompat.Builder =
-    this.setProgress(0, 0, false)
+private fun Context.makeMigrationProgressNotification(progress: MigrationService.Progress): Notification {
+    val builder = NotificationCompat.Builder(this, Channel.SCOPED_STORAGE_MIGRATION.id )
+        .setSmallIcon(R.drawable.ic_star_notify)
+        .setContentTitle(resources.getString(R.string.migrating_data_message))
+        .setPriority(NotificationCompat.PRIORITY_LOW)
+        .setSilent(true)
+
+    when (progress) {
+        is MigrationService.Progress.CalculatingTransferSize -> {
+            builder.setOngoing(true)
+            builder.setProgress(0, 0, true)
+            builder.setContentText("Calculating transfer size…")
+        }
+
+        is MigrationService.Progress.Transferring -> {
+            val progressRatio = progress.transferredBytes.toFloat() / progress.totalBytes
+
+            val transferredSizeText = Formatter.formatShortFileSize(this, progress.transferredBytes)
+            val totalSizeText = Formatter.formatShortFileSize(this, progress.totalBytes)
+
+            builder.setOngoing(true)
+            builder.setProgress(Int.MAX_VALUE, (progressRatio * Int.MAX_VALUE).toInt(), false)
+            builder.setContentText("Migrated $transferredSizeText of $totalSizeText")
+        }
+
+        is MigrationService.Progress.Success -> {
+            builder.setProgress(100, 100, false)
+            builder.setContentText("Migration done")
+        }
+
+        is MigrationService.Progress.Failure -> {
+            // TODO Add back Copy debug info
+            builder.setContentText("Migration failed: ${progress.e}")
+        }
+    }
+
+    return builder.build()
+}

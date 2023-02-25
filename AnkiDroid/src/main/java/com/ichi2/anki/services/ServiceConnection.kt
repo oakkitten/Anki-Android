@@ -67,7 +67,7 @@ abstract class ServiceConnection<T : Service> {
     fun unbind(context: Context) {
         instance?.let { onServiceDisconnected(it) }
         if (serviceBound) {
-            context.unbindService(connection)
+            // context.unbindService(connection)
         }
         serviceBound = false
     }
